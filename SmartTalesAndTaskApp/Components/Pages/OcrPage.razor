@@ -1,0 +1,50 @@
+﻿@page "/ocr"
+
+@using SmartTalesAndTaskApp.Services
+@inject OcrService OcrService
+
+<h3>Extracting Text from Image</h3>
+
+<button @onclick="PickImage">Pick Image</button>
+
+@if(!string.IsNullOrWhiteSpace(imagePath))
+{
+    <img src="@imagePath" width="200" />
+    <button @onclick="ExtractText">Extract Text</button>
+}
+
+@if (!string.IsNullOrWhiteSpace(expectedText))
+{
+    <h4>Extracted Text</h4>
+    <p>@expectedText</p>
+}
+
+
+@code {
+    private string imagePath = string.Empty;
+    private string expectedText = string.Empty;
+
+    private async Task PickImage()
+    {
+        var result = await FilePicker.PickAsync(new PickOptions
+        {
+            FileTypes = FilePickerFileType.Images
+        });
+
+        if(result != null)
+        {
+            imagePath = result.FullPath;
+        }
+
+    }
+
+    private async Task ExtractText()
+    {
+        if(!string.IsNullOrWhiteSpace(imagePath))
+        {
+            expectedText = await OcrService.ExtractTextFromImageAsync(imagePath);
+        }
+
+    }
+
+}
