@@ -58,6 +58,10 @@
     </ItemGroup>
 
     <ItemGroup>
+      <Content Remove="wwwroot\images\cloud_upload_icon.png" />
+    </ItemGroup>
+
+    <ItemGroup>
       <None Remove="Resources\raw\eng.traineddata" />
     </ItemGroup>
 
@@ -74,6 +78,10 @@
       <MauiAsset Update="Resources\Raw\eng.traineddata">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </MauiAsset>
+    </ItemGroup>
+
+    <ItemGroup>
+      <MauiAsset Include="wwwroot\images\cloud_upload_icon.png" />
     </ItemGroup>
 
 </Project>

@@ -9,87 +9,47 @@ namespace SmartTalesAndTaskApp.Services
 {
     public class OcrService
     {
-        //private readonly string _tessDataPath;
-        //public  OcrService()
-        //{
-        //    _tessDataPath = Path.Combine(FileSystem.AppDataDirectory, "tessdata");
-        //    CopyTessdataIfNotExists();
-        //}
-
-        //private void CopyTessdataIfNotExists()
-        //{
-        //    var tessFile = Path.Combine(_tessDataPath, "eng.traineddata");
-        //    if (!File.Exists(tessFile))
-        //    {
-        //        Directory.CreateDirectory(_tessDataPath);
-        //        var source = FileSystem.OpenAppPackageFileAsync("eng.traineddata").Result;
-        //        using var stream = File.Create(tessFile);
-        //        source.CopyTo(stream);
-        //    }
-        //}
-
-        //public async Task<string> ExtractTextFromImageAsync(string imagePath)
-        //{
-        //    try
-        //    {
-        //        using var engine = new TesseractEngine(_tessDataPath, "eng", EngineMode.Default);
-        //        using var image = Pix.LoadFromFile(imagePath);
-        //        using var page = engine.Process(image);
-        //        return page.GetText();
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        return $"Error: {ex.Message}";
-        //    }
-        //}
-
+        private readonly HttpClient _client;
         private readonly string _tessDataPath;
+
+        private readonly string _apiUrl = "https://localhost:7079/api/OCR/extract-text"; // Store in appsettings.json for better practice
 
         public OcrService()
         {
-            _tessDataPath = Path.Combine(FileSystem.AppDataDirectory, "tessdata");
-            Task.Run(CopyTessdataIfNotExists).Wait(); // Ensure tessdata exists before using OCR
+            _client = new HttpClient();
         }
 
-        private async Task CopyTessdataIfNotExists()
-        {
-            try
-            {
-                string tessFile = Path.Combine(_tessDataPath, "eng.traineddata");
-
-                if (!File.Exists(tessFile))
-                {
-                    Directory.CreateDirectory(_tessDataPath); // Ensure directory exists
-
-                    using var sourceStream = await FileSystem.OpenAppPackageFileAsync("eng.traineddata");
-                    using var destinationStream = File.Create(tessFile);
-                    await sourceStream.CopyToAsync(destinationStream);
-
-                    //Console.WriteLine($"✅ Tesseract data copied to: {tessFile}");
-                }
-                else
-                {
-                    //Console.WriteLine("✅ Tesseract data already exists.");
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"❌ Error copying Tesseract data: {ex.Message}");
-            }
-        }
+       
+        
 
         public async Task<string> ExtractTextFromImageAsync(string imagePath)
         {
             try
             {
-                using var engine = new TesseractEngine(_tessDataPath, "eng", EngineMode.Default);
-                using var image = Pix.LoadFromFile(imagePath);
-                using var page = engine.Process(image);
+                var file = File.OpenRead(imagePath);
+                if (file == null || file.Length == 0)
+                {
+                    return "❌ Failed to read the image.";
+                }
 
-                string extractedText = page.GetText();
-                Console.WriteLine($"✅ Extracted Text: {extractedText}");
+                var memoryStream = new MemoryStream();
+                file.CopyTo(memoryStream);
 
-                return extractedText;
+                using var content = new MultipartFormDataContent();
+                var imageContent = new ByteArrayContent(memoryStream.ToArray());
+                content.Add(imageContent, "image", "image.jpg");
+
+                // Call .NET Web API for OCR
+                var response = await _client.PostAsync(_apiUrl, content);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    return $"❌ Error: {response.ReasonPhrase}";
+                   
+                }
+
+                
+                return await response.Content.ReadAsStringAsync();
             }
             catch (Exception ex)
             {
