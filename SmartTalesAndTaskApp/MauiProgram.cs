@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 using SmartTalesAndTaskApp.Services;
+using Plugin.Maui.Audio;
 
 namespace SmartTalesAndTaskApp
 {
@@ -17,9 +18,12 @@ namespace SmartTalesAndTaskApp
 
             builder.Services.AddMauiBlazorWebView();
             builder.Services.AddSingleton<OcrService>();
+            // Register the audio manager
+            builder.Services.AddSingleton(AudioManager.Current);
 
-            #if DEBUG
-    		builder.Services.AddBlazorWebViewDeveloperTools();
+
+#if DEBUG
+            builder.Services.AddBlazorWebViewDeveloperTools();
     		builder.Logging.AddDebug();
             #endif
 

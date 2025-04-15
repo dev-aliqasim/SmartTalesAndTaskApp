@@ -112,6 +112,7 @@
                     <button class="btn btn-danger col" @onclick="RemoveImage">Remove</button>
                     <button class="btn btn-primary col" @onclick="PickImage">Pick Another</button>
                     <button class="btn btn-primary col" @onclick="ExtractText">Extract Text</button>
+                    <button class="btn btn-primary col" @onclick="ConvertImageToAudio">Convert to Audio</button>
                 </div>
             </div>
         }
@@ -174,6 +175,15 @@
         if (!string.IsNullOrWhiteSpace(imagePath))
         {
             expectedText = await OcrService.ExtractTextFromImageAsync(imagePath);
+        }
+
+    }
+
+    private async Task ConvertImageToAudio()
+    {
+        if (!string.IsNullOrWhiteSpace(imagePath))
+        {
+            await OcrService.ConvertImageToAudio(imagePath);
         }
 
     }
