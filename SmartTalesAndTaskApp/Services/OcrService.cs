@@ -16,11 +16,13 @@ namespace SmartTalesAndTaskApp.Services
         private readonly string _baseApiUrl;
         private readonly string _apiUrl; // Store in appsettings.json for better practice
 
-        private readonly IAudioManager _audio;
-        public OcrService(IAudioManager audio)
+        private readonly string _audioFilePath;
+
+
+        public OcrService()
         {
-            _audio = audio;
             _client = new HttpClient();
+            _audioFilePath = Path.Combine(FileSystem.AppDataDirectory, "audio.wav");
 
             // Detect platform and set Base API URL
             if (DeviceInfo.Platform == DevicePlatform.Android)
@@ -86,14 +88,15 @@ namespace SmartTalesAndTaskApp.Services
             }
         }
 
-        public async Task ConvertImageToAudio(string imagePath)
+        public string GetAudioFilePath() => File.Exists(_audioFilePath) ? _audioFilePath : string.Empty;
+        public async Task<string?> ConvertImageToAudio(string imagePath)
         {
             try
             {
                 var file = File.OpenRead(imagePath);
                 if (file == null || file.Length == 0)
                 {
-                    //return "❌ Failed to read the image.";
+                    return null;
                 }
 
                 var memoryStream = new MemoryStream();
@@ -112,19 +115,23 @@ namespace SmartTalesAndTaskApp.Services
 
                 if (!response.IsSuccessStatusCode)
                 {
-                    //return $"❌ Error: {response.ReasonPhrase}";
+                    return null;
 
                 }
 
+                await using var audioStream = await response.Content.ReadAsStreamAsync();
 
-                var audioStream = await response.Content.ReadAsStreamAsync();
-                var player = _audio.CreatePlayer(audioStream);
-                player.Play();
+                // Save audio file locally
+                using var fileStream = File.Create(_audioFilePath);
+                await audioStream.CopyToAsync(fileStream);
+
+                return _audioFilePath;
+
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"❌ OCR Error: {ex.Message}");
-                //return $"Error: {ex.Message}";
+                return null;
             }
         }
 
