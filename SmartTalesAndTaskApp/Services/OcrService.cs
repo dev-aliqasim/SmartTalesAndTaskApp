@@ -89,7 +89,7 @@ namespace SmartTalesAndTaskApp.Services
         }
 
         public string GetAudioFilePath() => File.Exists(_audioFilePath) ? _audioFilePath : string.Empty;
-        public async Task<string?> ConvertImageToAudio(string imagePath)
+        public async Task<Stream?> ConvertImageToAudio(string imagePath)
         {
             try
             {
@@ -119,13 +119,14 @@ namespace SmartTalesAndTaskApp.Services
 
                 }
 
-                await using var audioStream = await response.Content.ReadAsStreamAsync();
+                return await response.Content.ReadAsStreamAsync();
+                //await using var audioStream = await response.Content.ReadAsStreamAsync();
 
-                // Save audio file locally
-                using var fileStream = File.Create(_audioFilePath);
-                await audioStream.CopyToAsync(fileStream);
+                //// Save audio file locally
+                //using var fileStream = File.Create(_audioFilePath);
+                //await audioStream.CopyToAsync(fileStream);
 
-                return _audioFilePath;
+                //return _audioFilePath;
 
             }
             catch (Exception ex)

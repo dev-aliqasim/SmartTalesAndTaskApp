@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using SmartTalesAndTaskApp.Services;
 using Plugin.Maui.Audio;
+using CommunityToolkit.Maui;
 
 namespace SmartTalesAndTaskApp
 {
@@ -11,6 +12,7 @@ namespace SmartTalesAndTaskApp
             var builder = MauiApp.CreateBuilder();
             builder
                 .UseMauiApp<App>()
+                .UseMauiCommunityToolkitMediaElement()
                 .ConfigureFonts(fonts =>
                 {
                     fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");

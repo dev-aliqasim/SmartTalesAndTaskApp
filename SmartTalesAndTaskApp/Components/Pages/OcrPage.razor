@@ -1,6 +1,8 @@
 ﻿@page "/ocr"
 
 @using SmartTalesAndTaskApp.Services
+@* @using CommunityToolkit.Maui.Views
+@using Microsoft.Maui.Controls *@
 @inject OcrService OcrService
 
 
@@ -105,44 +107,23 @@
 
 </div>
 <br />
-@if (!string.IsNullOrWhiteSpace(expectedText))
+@if (AudioUrlBase64 != null)
 {
-    <div class="container">
-        <div class="upload-box">
-            @if (!string.IsNullOrWhiteSpace(expectedText))
-            {
-                <h4>Extracted Text</h4>
-                <pre>@expectedText</pre>
-            }
-        </div>
-    </div>
+    <audio controls>
+        <source src="@AudioUrlBase64" type="audio/wav">
+        Your browser does not support the audio element.
+    </audio>
 }
-
-<h3>Audio Playback Demo</h3>
-
-@* @if (!string.IsNullOrEmpty(AudioUrl))
-{ *@
-    <p>Audio loaded successfully!<br />Audio path: @AudioUrl</p>
-
-@*  <MediaElement Source="@AudioUrl"
-                         ShowsPlaybackControls="true"
-                         AutoPlay="false"
-                         HeightRequest="80"
-                         WidthRequest="300"
-                         Aspect="Aspect.AspectFit" /> *@
-@* }
-else
-{
-    <p>No audio loaded yet.</p>
-}
- *@
 
 
 @code {
     private string imagePath = string.Empty;
     private string previewPath = string.Empty;
     private string expectedText = string.Empty;
-    private string AudioUrl = string.Empty;
+    private Stream? AudioUrl = null;
+    private ElementReference audioPlayer;
+    private string? AudioUrlBase64 = null;
+
 
     private void RemoveImage()
     {
@@ -187,14 +168,18 @@ else
     {
         if (!string.IsNullOrWhiteSpace(imagePath))
         {
-            var response = await OcrService.ConvertImageToAudio(imagePath);
-            if(response != null)
+            var audioStream = await OcrService.ConvertImageToAudio(imagePath);
+            if (audioStream != null)
             {
-                AudioUrl = response;
+                using var ms = new MemoryStream();
+                await audioStream.CopyToAsync(ms);
+                var audioBytes = ms.ToArray();
+                var base64 = Convert.ToBase64String(audioBytes);
+                AudioUrlBase64 = $"data:audio/wav;base64,{base64}";
             }
             else
             {
-                AudioUrl = null;
+                AudioUrlBase64 = null;
             }
         }
 
