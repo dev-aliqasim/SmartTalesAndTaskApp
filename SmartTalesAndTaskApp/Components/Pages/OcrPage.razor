@@ -14,7 +14,7 @@
         justify-content: center;
         align-items: center;
         height: 50%;
-        width: 100% ;
+        width: 100%;
         /* background-color: #f8f9fa; */
     }
 
@@ -80,7 +80,7 @@
     <div class="upload-box">
         @if (string.IsNullOrEmpty(@imagePath) || string.IsNullOrEmpty(@previewPath))
         {
-            <div class="upload-area" 
+            <div class="upload-area"
                  @ondrop="HandleFileDrop"
                  @ondragover="HandleDragOver">
                 <img src="images/cloud_upload_icon.png" alt="Upload Icon" class="upload-icon" />
@@ -93,7 +93,7 @@
         else
         {
             <div class="upload-area row">
-                <div class="col"><img class="upload-preview" src="@previewPath"  alt="Uploaded Image" /></div>
+                <div class="col"><img class="upload-preview" src="@previewPath" alt="Uploaded Image" /></div>
                 <div class="row gap-1">
                     <button class="btn btn-danger col" @onclick="RemoveImage">Remove</button>
                     <button class="btn btn-primary col" @onclick="PickImage">Pick Another</button>
@@ -107,13 +107,30 @@
 
 </div>
 <br />
-@if (AudioUrlBase64 != null)
+@if (loader == true)
 {
-    <audio controls>
-        <source src="@AudioUrlBase64" type="audio/wav">
-        Your browser does not support the audio element.
-    </audio>
+    <p>Converting Image to Speech. Please wait a while!</p>
 }
+@if (AudioUrlBase64 != null && loader == false)
+{
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-4">
+                <audio controls>
+                    <source src="@AudioUrlBase64" type="audio/wav">
+                    Your browser does not support the audio element.
+                </audio>
+            </div>
+            <div class="col-md-2 align-items-baseline">
+                <button class="btn btn-primary col" @onclick="ClearAudioSource">X</button>
+
+            </div>
+        </div>
+
+    </div>
+
+}
+
 
 
 @code {
@@ -123,6 +140,7 @@
     private Stream? AudioUrl = null;
     private ElementReference audioPlayer;
     private string? AudioUrlBase64 = null;
+    private bool loader = false;
 
 
     private void RemoveImage()
@@ -131,6 +149,11 @@
         this.previewPath = "";
 
         this.expectedText = "";
+    }
+
+    private void ClearAudioSource()
+    {
+        this.AudioUrlBase64 = null;
     }
 
     private async Task PickImage()
@@ -166,6 +189,7 @@
 
     private async Task ConvertImageToAudio()
     {
+        loader = true;
         if (!string.IsNullOrWhiteSpace(imagePath))
         {
             var audioStream = await OcrService.ConvertImageToAudio(imagePath);
@@ -176,10 +200,13 @@
                 var audioBytes = ms.ToArray();
                 var base64 = Convert.ToBase64String(audioBytes);
                 AudioUrlBase64 = $"data:audio/wav;base64,{base64}";
+
+                loader = false;
             }
             else
             {
                 AudioUrlBase64 = null;
+                loader = false;
             }
         }
 
